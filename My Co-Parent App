@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Parent Advice Coach - Premium Prototype</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        /* Custom scrollbar for output area */
+        #adviceOutput, #communityAdviceList {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        #adviceOutput::-webkit-scrollbar, #communityAdviceList::-webkit-scrollbar {
+            width: 6px;
+        }
+        #adviceOutput::-webkit-scrollbar-thumb, #communityAdviceList::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1; /* slate-300 */
+            border-radius: 3px;
+        }
+        .premium-text {
+            color: #d97706; /* Amber-600 */
+        }
+        .premium-bg {
+            background-color: #fffbeb; /* Amber-50 */
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 flex flex-col items-center">
+
+    <!-- Main Container -->
+    <div class="w-full max-w-xl bg-white rounded-xl shadow-2xl p-6 md:p-8">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-blue-700">The Guidance Compass</h1>
+            <p class="text-md text-gray-500 mt-1">AI & Community Support for Single Parents</p>
+        </header>
+
+        <!-- Status and ID Display -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+            <p id="userIdDisplay" class="text-xs text-gray-500"></p>
+            <div id="statusDisplay" class="font-bold text-sm mt-2 sm:mt-0 px-3 py-1 rounded-full text-center">Loading Status...</div>
+        </div>
+
+        <!-- Upgrade Section -->
+        <section id="upgradeSection" class="premium-bg p-4 border border-amber-300 rounded-xl mb-8 hidden">
+            <h2 class="text-xl font-bold premium-text mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
+                </svg>
+                Unlock Unlimited Advice
+            </h2>
+            <p class="text-sm text-gray-700 mb-3">Upgrade to Premium for unlimited access to the AI Coach and future premium features.</p>
+            <button id="upgradeButton" onclick="simulatePurchase()"
+                    class="w-full px-4 py-3 bg-amber-500 text-white font-bold rounded-lg shadow-lg hover:bg-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-300 transition duration-150 ease-in-out disabled:opacity-50">
+                Simulate Premium Purchase ($9.99/mo)
+            </button>
+            <p id="upgradeMessage" class="text-sm mt-2 text-center text-amber-600 font-semibold hidden"></p>
+        </section>
+
+        <!-- AI Advice Input Section -->
+        <section class="mb-8 p-4 border border-blue-200 rounded-xl bg-blue-50">
+            <h2 class="text-xl font-bold text-blue-700 mb-3">1. Ask the AI Coach</h2>
+            <label for="parentQuery" class="block text-md font-semibold text-gray-700 mb-2">Describe Your Challenge:</label>
+            <textarea id="parentQuery" rows="3" 
+                      placeholder="E.g., 'My 8-year-old throws a tantrum every morning when I ask him to get ready for school.'"
+                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out resize-none shadow-sm"></textarea>
+            
+            <button id="adviceButton" onclick="getAdvice()"
+                    class="mt-4 w-full px-4 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out disabled:opacity-50">
+                Get Personalized AI Advice
+            </button>
+        </section>
+        
+        <!-- AI Output Section -->
+        <section class="mt-8 mb-8">
+            <h2 class="text-xl font-bold text-gray-700 mb-3">AI Coach Response</h2>
+            <div id="adviceOutput" class="min-h-[100px] p-4 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 leading-relaxed whitespace-pre-wrap">
+                <p class="text-gray-400 italic">Advice from your coach will appear here.</p>
+            </div>
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="hidden text-center py-6">
+                <div class="flex items-center justify-center space-x-2">
+                    <div class="w-4 h-4 bg-blue-600 rounded-full animate-pulse"></div>
+                    <div class="w-4 h-4 bg-blue-600 rounded-full animate-pulse delay-75"></div>
+                    <div class="w-4 h-4 bg-blue-600 rounded-full animate-pulse delay-150"></div>
+                    <span class="text-blue-600 font-medium ml-3">Analyzing and preparing advice...</span>
+                </div>
+            </div>
+            <!-- Sources Output -->
+            <div id="sourcesOutput" class="mt-4 pt-3 border-t border-gray-200 hidden">
+                <p class="text-xs font-semibold text-gray-600 mb-1">Sources Referenced:</p>
+                <ul id="sourcesList" class="text-xs text-gray-500 space-y-1"></ul>
+            </div>
+        </section>
+
+        <!-- Community Section -->
+        <section class="mt-8 pt-6 border-t border-gray-300">
+            <h2 class="text-2xl font-bold text-green-700 mb-4">2. Community Advice Hub</h2>
+
+            <!-- Community Advice Submission Form -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded-xl mb-6">
+                <h3 class="text-lg font-semibold text-green-700 mb-2">Share Your Wisdom:</h3>
+                <textarea id="communityInput" rows="3" 
+                          placeholder="Have you faced a similar challenge? Share what worked for you! Be kind and supportive."
+                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out resize-none shadow-sm"></textarea>
+                <button id="submitAdviceButton" onclick="submitParentAdvice()"
+                        class="mt-3 w-full px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition duration-150 ease-in-out disabled:opacity-50">
+                    Submit Advice
+                </button>
+            </div>
+
+            <!-- List of Community Advice -->
+            <h3 class="text-lg font-bold text-gray-700 mb-3">What Other Parents Say:</h3>
+            <div id="communityAdviceList" class="space-y-4">
+                <p id="loadingCommunity" class="text-sm text-gray-500 italic">Loading community advice...</p>
+                <!-- Advice cards will be inserted here -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Firebase SDK Imports (Mandatory Setup) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables for Firebase and App ID
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof _firebase_config !== 'undefined' ? JSON.parse(_firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const MAX_FREE_TRIES = 3;
+        const INITIAL_PROFILE = {
+            isPremium: false,
+            freeTriesLeft: MAX_FREE_TRIES,
+            lastUpdated: Date.now()
+        };
+
+        let db = null;
+        let auth = null;
+        let userId = null;
+        window.userStatus = {...INITIAL_PROFILE}; // Global state for premium status
+
+        // The public collection path for shared advice
+        const ADVICE_COLLECTION_PATH = artifacts/${appId}/public/data/parent_advice;
+        window.ADVICE_COLLECTION_PATH = ADVICE_COLLECTION_PATH;
+        
+        /**
+         * Returns the path to the user's private profile document.
+         * @param {string} uid The user's unique ID.
+         * @returns {DocumentReference} The Firestore document reference.
+         */
+        function getUserProfileDocRef(uid) {
+            return doc(db, 'artifacts', appId, 'users', uid, 'profile');
+        }
+
+        // --- UI Update Logic ---
+        function updateStatusDisplay(status) {
+            const display = document.getElementById('statusDisplay');
+            const upgradeSection = document.getElementById('upgradeSection');
+
+            if (status.isPremium) {
+                display.className = 'font-bold text-sm px-3 py-1 rounded-full text-white bg-amber-500';
+                display.textContent = '⭐ Premium Member (Unlimited)';
+                upgradeSection.classList.add('hidden');
+            } else {
+                display.className = 'font-bold text-sm px-3 py-1 rounded-full text-red-700 bg-red-100';
+                display.textContent = Free User (${status.freeTriesLeft} AI requests left);
+                if (status.freeTriesLeft > 0) {
+                     upgradeSection.classList.remove('hidden');
+                } else {
+                     upgradeSection.classList.remove('hidden');
+                     document.getElementById('upgradeButton').textContent = 'Access Locked: Go Premium';
+                }
+            }
+        }
+
+
+        // --- FIREBASE INITIALIZATION AND AUTHENTICATION ---
+        if (firebaseConfig) {
+            try {
+                setLogLevel('Debug');
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                window.db = db;
+
+                const signInUser = async () => {
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Firebase sign-in failed:", error);
+                        // Fallback UI error message
+                        document.getElementById('adviceOutput').innerHTML = <p class="text-red-500">Error authenticating. Community features may not work: ${error.message}</p>;
+                    }
+                };
+                
+                // Wait for auth state change to get the final user ID and fetch profile
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        window.userId = userId;
+                        console.log("Firebase Auth Ready. User ID:", userId);
+
+                        const idDisplay = document.getElementById('userIdDisplay');
+                        if (idDisplay) {
+                            idDisplay.innerHTML = 👋 Your User ID: <strong class="text-blue-700">${userId.substring(0, 8)}...</strong> (Full ID: ${userId});
+                        }
+                        
+                        // Start real-time listener for user profile
+                        const profileRef = getUserProfileDocRef(userId);
+                        onSnapshot(profileRef, (docSnap) => {
+                            if (docSnap.exists()) {
+                                // Load existing profile
+                                window.userStatus = docSnap.data();
+                                console.log("User Profile Loaded:", window.userStatus);
+                            } else {
+                                // Create new profile if it doesn't exist
+                                setDoc(profileRef, INITIAL_PROFILE);
+                                console.log("New User Profile Created.");
+                            }
+                            updateStatusDisplay(window.userStatus);
+                            // Start listening to community advice once authenticated and profile is ready
+                            window.loadCommunityAdvice(db, ADVICE_COLLECTION_PATH);
+                        }, (error) => {
+                            console.error("Error listening to user profile:", error);
+                            document.getElementById('statusDisplay').textContent = 'Profile Error';
+                        });
+
+                    } else {
+                        // Should not happen with anonymous sign-in, but as a guard
+                        userId = crypto.randomUUID(); 
+                        console.warn("User state not detected.");
+                    }
+                });
+
+                signInUser();
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.getElementById('adviceOutput').innerHTML = <p class="text-red-500">Error initializing Firebase: ${error.message}</p>;
+            }
+        } else {
+            console.warn("Firebase config not found. Running without persistent storage/auth/gating.");
+        }
+
+
+        // --- FIRESTORE COMMUNITY LOGIC (Unchanged) ---
+        
+        function renderCommunityAdvice(advices) {
+            const list = document.getElementById('communityAdviceList');
+            document.getElementById('loadingCommunity').classList.add('hidden');
+            list.innerHTML = ''; 
+
+            if (advices.length === 0) {
+                list.innerHTML = <p class="text-sm text-gray-500 p-3 bg-white border rounded-lg">Be the first to share your advice!</p>;
+                return;
+            }
+
+            advices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            advices.forEach(advice => {
+                const isCurrentUser = advice.userId === window.userId;
+                const card = document.createElement('div');
+                card.className = p-4 rounded-xl shadow-lg border ${isCurrentUser ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-gray-200'};
+                
+                const timeString = advice.timestamp ? new Date(advice.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Unknown time';
+                const dateString = advice.timestamp ? new Date(advice.timestamp).toLocaleDateString() : 'Unknown date';
+
+                card.innerHTML = `
+                    <p class="text-gray-800 whitespace-pre-wrap mb-2">${advice.text}</p>
+                    <div class="text-right border-t pt-2 mt-2">
+                        <p class="text-xs font-medium ${isCurrentUser ? 'text-indigo-600' : 'text-gray-600'}">
+                            Shared by: 
+                            <span class="font-bold">${isCurrentUser ? 'You' : Parent ${advice.userId.substring(0, 6)}...}</span>
+                        </p>
+                        <p class="text-xs text-gray-400">${dateString} at ${timeString}</p>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+        
+        window.loadCommunityAdvice = function(firestore, collectionPath) {
+            if (!firestore || !window.userId) {
+                console.log("Firestore or Auth not ready yet. Skipping community load.");
+                return;
+            }
+
+            const adviceRef = collection(firestore, collectionPath);
+            
+            onSnapshot(adviceRef, (snapshot) => {
+                const advices = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    advices.push({
+                        id: doc.id,
+                        text: data.text,
+                        userId: data.userId,
+                        timestamp: data.timestamp,
+                    });
+                });
+                console.log(Loaded ${advices.length} community advice entries.);
+                renderCommunityAdvice(advices);
+            }, (error) => {
+                console.error("Error loading community advice:", error);
+                document.getElementById('communityAdviceList').innerHTML = <p class="text-red-500">Error loading community data.</p>;
+            });
+        }
+
+        window.submitParentAdvice = async function() {
+            const inputElement = document.getElementById('communityInput');
+            const buttonElement = document.getElementById('submitAdviceButton');
+            const adviceText = inputElement.value.trim();
+
+            if (!window.db || !window.userId) {
+                // Use non-alert message for user feedback
+                document.getElementById('adviceOutput').innerHTML = <p class="text-red-500">System not ready. Please wait for initialization.</p>;
+                return;
+            }
+
+            if (!adviceText) {
+                inputElement.style.borderColor = 'red';
+                setTimeout(() => inputElement.style.borderColor = '', 1000);
+                return;
+            }
+            
+            buttonElement.disabled = true;
+            buttonElement.textContent = 'Submitting...';
+
+            try {
+                const adviceRef = collection(window.db, window.ADVICE_COLLECTION_PATH);
+                
+                await addDoc(adviceRef, {
+                    text: adviceText,
+                    userId: window.userId,
+                    timestamp: Date.now(),
+                });
+
+                inputElement.value = '';
+
+            } catch (error) {
+                console.error("Error submitting advice:", error);
+                buttonElement.textContent = 'Submission Failed (See console)';
+                setTimeout(() => buttonElement.textContent = 'Submit Advice', 3000);
+            } finally {
+                buttonElement.disabled = false;
+                buttonElement.textContent = 'Submit Advice';
+            }
+        }
+        
+        // --- PREMIUM SIMULATION LOGIC ---
+        
+        window.simulatePurchase = async function() {
+            if (!window.db || !window.userId) {
+                 document.getElementById('upgradeMessage').textContent = 'System not ready. Please wait.';
+                 document.getElementById('upgradeMessage').classList.remove('hidden');
+                 return;
+            }
+
+            const button = document.getElementById('upgradeButton');
+            button.disabled = true;
+            button.textContent = 'Activating Premium...';
+            
+            try {
+                const profileRef = getUserProfileDocRef(window.userId);
+                
+                await setDoc(profileRef, {
+                    isPremium: true,
+                    freeTriesLeft: MAX_FREE_TRIES, // Reset free counter if they upgrade later
+                    lastUpdated: Date.now(),
+                    isSimulation: true // Flag that this was a simulated purchase
+                }, { merge: true });
+
+                console.log("Premium status updated in Firestore.");
+                document.getElementById('upgradeMessage').textContent = '🥳 Success! You are now a Premium Member.';
+                document.getElementById('upgradeMessage').classList.remove('hidden');
+                document.getElementById('upgradeSection').classList.add('hidden'); // Hide the upgrade button
+                
+                // The onSnapshot listener above will automatically update window.userStatus and the UI
+
+            } catch (error) {
+                console.error("Error simulating purchase:", error);
+                document.getElementById('upgradeMessage').textContent = Purchase failed (Error: ${error.message}).;
+            } finally {
+                setTimeout(() => {
+                    document.getElementById('upgradeMessage').classList.add('hidden');
+                    button.disabled = false;
+                    button.textContent = 'Simulate Premium Purchase ($9.99/mo)';
+                }, 3000);
+            }
+        }
+
+    </script>
+    <!-- Main Application Logic (Gemini API) -->
+    <script>
+        // --- GEMINI AI LOGIC (Modified for Gating) ---
+        
+        window.getAdvice = async function() {
+            const queryElement = document.getElementById('parentQuery');
+            const outputElement = document.getElementById('adviceOutput');
+            const adviceButton = document.getElementById('adviceButton');
+            const userQuery = queryElement.value.trim();
+
+            if (!userQuery) {
+                outputElement.innerHTML = <p class="text-red-500 font-semibold">Please describe a challenge before seeking advice.</p>;
+                return;
+            }
+            
+            const status = window.userStatus;
+
+            // --- GATING CHECK ---
+            if (!status.isPremium && status.freeTriesLeft <= 0) {
+                outputElement.innerHTML = `
+                    <div class="p-4 border-2 border-amber-500 rounded-lg premium-bg">
+                        <h4 class="text-lg font-bold premium-text">Access Limit Reached!</h4>
+                        <p class="text-gray-700 mt-1">You have used your ${MAX_FREE_TRIES} free AI advice requests.</p>
+                        <p class="text-gray-700 mt-2">Please <strong class="premium-text">Upgrade to Premium</strong> above for unlimited, ongoing support from your AI Coach.</p>
+                    </div>
+                `;
+                return;
+            }
+            // --- END GATING CHECK ---
+
+
+            // UI State: Disable button, show loading
+            adviceButton.disabled = true;
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            outputElement.innerHTML = '';
+            document.getElementById('sourcesOutput').classList.add('hidden');
+            document.getElementById('sourcesList').innerHTML = '';
+
+            // --- API CALL AND RETRY LOGIC (Unchanged) ---
+            const systemPrompt = "You are 'Parent Coach Gemini,' an empathetic and highly experienced parenting advisor specializing in providing practical, actionable, and supportive advice for single parents. Your tone must be warm, non-judgmental, and focused on positive communication strategies. Responses should be formatted clearly using Markdown headings, lists, or bold text for readability.";
+            const apiKey = ""; 
+            const model = "gemini-2.5-flash-preview-09-2025";
+            const apiUrl = https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey};
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            const maxRetries = 3;
+            let attempt = 0;
+            let success = false;
+            let response;
+            
+            while (attempt < maxRetries && !success) {
+                attempt++;
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(HTTP error! status: ${response.status});
+                    }
+                    success = true;
+
+                } catch (error) {
+                    console.error(Attempt ${attempt} failed:, error);
+                    if (attempt < maxRetries) {
+                        const delay = Math.pow(2, attempt) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        outputElement.innerHTML = <p class="text-red-500 font-semibold">Apologies, I couldn't connect to the AI advice service right now. Please try again later.</p>;
+                    }
+                }
+            }
+            
+            // UI State: Hide loading, enable button
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            adviceButton.disabled = false;
+
+            if (success) {
+                // --- Post-API Call Logic ---
+                if (!status.isPremium) {
+                    // Decrease free tries only if the user is not premium and the call was successful
+                    const newTries = status.freeTriesLeft - 1;
+                    const profileRef = getUserProfileDocRef(window.userId);
+                    // Use setDoc with merge to update only the counter
+                    await setDoc(profileRef, { freeTriesLeft: newTries, lastUpdated: Date.now() }, { merge: true });
+                    // UI will update via the onSnapshot listener
+                }
+
+                try {
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        const text = candidate.content.parts[0].text;
+                        
+                        let formattedText = text;
+                        formattedText = formattedText.replace(/### (.*)/g, '</h3><h3 class="text-lg font-bold mt-4 text-blue-800">$1</h3><h3 class="mt-2">');
+                        formattedText = formattedText.replace(/\\(.?)\\*/g, '<strong>$1</strong>');
+                        formattedText = formattedText.replace(/^\* (.*)/gm, '<li class="ml-4 list-disc">$1</li>');
+                        
+                        outputElement.innerHTML = <div class="p-2">${formattedText}</div>;
+
+                        let sources = [];
+                        const groundingMetadata = candidate.groundingMetadata;
+                        if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                            sources = groundingMetadata.groundingAttributions
+                                .map(attribution => ({
+                                    uri: attribution.web?.uri,
+                                    title: attribution.web?.title,
+                                }))
+                                .filter(source => source.uri && source.title);
+                        }
+
+                        if (sources.length > 0) {
+                            document.getElementById('sourcesOutput').classList.remove('hidden');
+                            const sourcesList = document.getElementById('sourcesList');
+                            sourcesList.innerHTML = '';
+                            sources.forEach((source, index) => {
+                                const listItem = document.createElement('li');
+                                listItem.innerHTML = <a href="${source.uri}" target="_blank" class="text-blue-500 hover:text-blue-700 hover:underline transition duration-150">${index + 1}. ${source.title}</a>;
+                                sourcesList.appendChild(listItem);
+                            });
+                        }
+
+                    } else {
+                        outputElement.innerHTML = <p class="text-red-500 font-semibold">I received an empty response. Please try phrasing your challenge differently.</p>;
+                    }
+
+                } catch (e) {
+                    console.error("Error processing response:", e);
+                    outputElement.innerHTML = <p class="text-red-500 font-semibold">A data processing error occurred. Check the console for details.</p>;
+                }
+            }
+        };
+    </script>
+</body>
+</html>
